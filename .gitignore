@@ -1,0 +1,28 @@
+# Raw downloads (re-create with src/download_*.py)
+data/raw/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Course documents kept outside the code repository
+proposal*.md
+proposal*.pdf
+build_pdf.py
+Literature_Review.xlsx
+Label_Noise_Ensembles_IEEE_Paper.pdf
+
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Office lock files and run logs
+~$*
+results/run_log.txt
