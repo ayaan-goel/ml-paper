@@ -1,2 +1,42 @@
 \section{Conclusion and Future Work}\label{sec:concl}
-Placeholder.
+
+In the present study, the robustness of district-level crop-yield models for Gujarat was measured
+under missing weather data and geographic distribution shift, separately and together. Holding out
+whole districts lowered $R^2$ by 0.08 to 0.13 compared with the random split used in most earlier
+studies, and predicting future seasons was harder still, because the upward trend in yields cannot
+be extrapolated by tree ensembles. Missing weather caused a smaller loss, which grew with the rate
+and was largest when whole variable groups were missing; iterative imputation helped most under
+random gaps, but the choice of model mattered more than the choice of imputer, and a random forest
+was the best model in almost every setting. Missingness and geographic shift did not compound:
+their combined loss was significantly smaller than the sum of their separate losses. Feature
+selection retained accuracy with fewer inputs without improving robustness, and location features
+helped the linear model only. In practice, a yield model for new districts should be validated with
+a district holdout rather than a random split, and a random forest with simple or iterative
+imputation can be expected to tolerate moderate gaps in its weather inputs.
+
+Several limitations suggest future work. Only one state, three crops and weather summaries at one
+point per district were used, so the findings should be tested in other regions and with weather
+aggregated over district boundaries. Soil, irrigation, input use and crop variety were not
+available, which limits the accuracy of every model. The missingness was simulated, and datasets
+with documented real gaps would be a natural next step. The hyperparameters were fixed, and only
+five district groups were used per fold, so the uncertainty of the geographic comparison remains
+considerable. District statistics after 2022--23 were not yet released, and the temporal results
+could be extended when they become available. Finally, models that handle trends explicitly, such
+as detrended targets or hybrid linear--tree models, could combine the strengths of ridge regression
+and random forests found here.
+
+\section*{Data Availability}
+
+The crop statistics are publicly available from the Directorate of Economics and Statistics,
+Ministry of Agriculture and Farmers Welfare \cite{desapy}, and the weather data from NASA POWER
+\cite{nasapower}. The code, the processed dataset, the fixed splits and all predictions are
+available in the project repository cited in Section~1.
+
+\section*{Conflict of Interest}
+
+The authors declare that they have no conflict of interest.
+
+\section*{Funding}
+
+This research received no specific grant from any funding agency in the public, commercial or
+not-for-profit sectors.

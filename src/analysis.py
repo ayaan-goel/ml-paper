@@ -111,7 +111,7 @@ def analyse_e1(panel):
     models = ["Mean", "Ridge", "RF", "XGB"]
     rows = []
     for c in CROPS:
-        rows.append(r"\multicolumn{7}{l}{\textit{" + c + "}}")
+        rows.append(r"\multicolumn{7}{l}{\textit{" + c + r"}} \\")
         for m in models:
             cells = []
             for d in ["random", "temporal", "district"]:
@@ -140,6 +140,7 @@ def analyse_e1(panel):
     # figure: R2 by design per crop
     fig, axes = plt.subplots(1, 3, figsize=(7.0, 2.1), sharey=True)
     colors = {"random": "#4C72B0", "temporal": "#DD8452", "district": "#55A868"}
+    models = ["Ridge", "RF", "XGB"]  # the mean predictor is reported in the table only
     for ax, c in zip(axes, CROPS):
         x = np.arange(len(models))
         for j, d in enumerate(["random", "temporal", "district"]):
@@ -151,7 +152,9 @@ def analyse_e1(panel):
         ax.set_xticks(x, models)
         ax.set_title(c)
     axes[0].set_ylabel("$R^2$")
-    axes[0].legend(loc="lower left", fontsize=7)
+    axes[0].set_ylim(-0.25, 0.5)
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="upper center", ncol=3, fontsize=7, bbox_to_anchor=(0.5, 1.06))
     fig.tight_layout()
     fig.savefig(FIG / "fig_e1_designs.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -262,11 +265,12 @@ def analyse_e2(panel, e1):
             q = cm[(cm.design == "district") & (cm.pattern == pat) & (cm.model == m) & (cm.imputer == i)].sort_values("rate")
             ax.plot([0] + list(100 * q.rate), [0] + list(q.d_nRMSE), color=col, ls=ls, marker=mk, ms=3,
                     lw=1, label=strat_label(m, i))
-        ax.set_title(PATTERN_NAMES[pat] + ", district holdout")
+        ax.set_title(PATTERN_NAMES[pat])
         ax.set_xlabel("Missingness rate (%)")
         ax.set_xticks([0, 10, 20, 30, 40])
     axes[0].set_ylabel(r"$\Delta$nRMSE (pp)")
-    axes[2].legend(fontsize=6.5, loc="upper left")
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="upper center", ncol=6, fontsize=6.5, bbox_to_anchor=(0.5, 1.07))
     fig.tight_layout()
     fig.savefig(FIG / "fig_e2_degradation.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -314,32 +318,43 @@ def analyse_e4():
     s.to_csv(TAB / "E4_per_crop.csv", index=False)
     cm = crop_mean(s, ["model", "features"])
     cm.to_csv(TAB / "E4_crop_mean.csv", index=False)
+    rows = []
+    for m in ["Ridge", "RF", "XGB"]:
+        w = s[(s.model == m) & (s.features == "weather")].set_index("crop")
+        l = s[(s.model == m) & (s.features == "weather+location")].set_index("crop")
+        cells = [f"{fmt(w.loc[c, 'R2_mean'])} " + r"$\rightarrow$" + f" {fmt(l.loc[c, 'R2_mean'])}" for c in CROPS]
+        rows.append(f"{m} & " + " & ".join(cells))
+    tex_table(rows, "e4.tex", "lccc", "Model & " + " & ".join(CROPS))
     return cm
 
 
 # ---------------------------------------------------------------- comparison with prior-style evaluation
 def table_prior_vs_ours(e1, cm2, rk):
-    """Prior-style evaluation (random split, complete data) vs realistic conditions."""
+    """R2 under the usual random-split protocol vs realistic conditions (crop means)."""
     e1c = crop_mean(e1, ["design", "model"]).set_index(["design", "model"])
-    best = rk.index[0]
-    out, rows = [], []
-    for m, i in [("RF", "median"), ("Ridge", "median"), ("XGB", "native")] + \
-                [tuple(x.split(" + ")) for x in [best]]:
-        imp = {"median": "median", "KNN": "knn", "iterative": "iterative", "native": "native"}[i]
-        r = dict(strategy=strat_label(m, imp), random=e1c.loc[("random", m), "R2_mean"],
-                 district=e1c.loc[("district", m), "R2_mean"])
-        for pat in ["mcar", "block"]:
-            q = cm2[(cm2.design == "district") & (cm2.pattern == pat) & (cm2.rate == 0.3) &
-                    (cm2.model == m) & (cm2.imputer == imp)].iloc[0]
-            r[f"district_{pat}30"] = q.R2_mean
+    strategies = [("Ridge", "median"), ("XGB", "median"), ("XGB", "native"), ("RF", "median"), ("RF", "iterative")]
+    cols = ["random", "temporal", "district", "mcar", "variable", "block"]
+    out = []
+    for m, i in strategies:
+        r = dict(strategy=strat_label(m, i), random=e1c.loc[("random", m), "R2_mean"],
+                 temporal=e1c.loc[("temporal", m), "R2_mean"], district=e1c.loc[("district", m), "R2_mean"])
+        for pat in ["mcar", "variable", "block"]:
+            r[pat] = cm2[(cm2.design == "district") & (cm2.pattern == pat) & (cm2.rate == 0.3) &
+                         (cm2.model == m) & (cm2.imputer == i)].R2_mean.iloc[0]
+        r["optimism"] = r["random"] - np.mean([r["mcar"], r["variable"], r["block"]])
         out.append(r)
-    df = pd.DataFrame(out).drop_duplicates("strategy")
+    df = pd.DataFrame(out)
     df.to_csv(TAB / "prior_vs_realistic.csv", index=False)
+    best = {c: df[c].max() for c in cols}
+    rows = []
     for r in df.itertuples():
-        rows.append(f"{r.strategy} & {fmt(r.random)} & {fmt(r.district)} & {fmt(r.district_mcar30)} & "
-                    f"{fmt(r.district_block30)}")
-    tex_table(rows, "prior_vs_ours.tex", "lrrrr",
-              r"Strategy & Random split & District & Distr.+MCAR 30\% & Distr.+block 30\%")
+        cells = [(r"\textbf{" + fmt(getattr(r, c)) + "}") if np.isclose(getattr(r, c), best[c]) else fmt(getattr(r, c))
+                 for c in cols]
+        rows.append(f"{r.strategy} & " + " & ".join(cells) + f" & {fmt(r.optimism)}")
+    tex_table(rows, "prior_vs_ours.tex", "lrrrrrrr",
+              r" & Usual & \multicolumn{2}{c}{Complete data} & \multicolumn{3}{c}{Distr.\ + 30\% missing} & \\ "
+              r"\cmidrule(lr){3-4}\cmidrule(lr){5-7}"
+              r"Strategy & random & Temp. & Distr. & MCAR & Var. & Block & Gap")
     return df
 
 
@@ -352,12 +367,39 @@ def main():
         s2, cm2, rk, fr = analyse_e2(panel, e1)
         print("E2 done; strategy ranks:\n", rk.round(2), "\n", fr)
         table_prior_vs_ours(e1, cm2, rk)
+        compare_recommended(panel)
     if (RES / "predictions_E3.csv.gz").exists():
         analyse_e3(panel)
         print("E3 done")
     if (RES / "predictions_E4.csv.gz").exists():
         analyse_e4()
         print("E4 done")
+
+
+
+
+# ---------------------------------------------------------------- recommended vs alternatives
+def compare_recommended(panel, rate=0.3):
+    """Bootstrap over districts: RMSE(alternative) - RMSE(RF + iterative), district holdout."""
+    p = pd.read_csv(RES / "predictions_E2.csv.gz")
+    p = p[(p.design == "district") & (p.rate == rate)]
+    dist = districts_of(panel)
+    out = []
+    for c in CROPS:
+        for pat in ["mcar", "variable", "block"]:
+            base = p[(p.crop == c) & (p.pattern == pat) & (p.model == "RF") & (p.imputer == "iterative")
+                     & (p.seed == 0)].sort_values("row_id")
+            g = dist.loc[c].loc[base.row_id].to_numpy()
+            eb = ((base.pred - base.y) ** 2).to_numpy()
+            for m, i in [("XGB", "native"), ("XGB", "median"), ("Ridge", "median"), ("RF", "median")]:
+                alt = p[(p.crop == c) & (p.pattern == pat) & (p.model == m) & (p.imputer == i)
+                        & (p.seed == 0)].sort_values("row_id")
+                d, ci = boot_rmse_diff(((alt.pred - alt.y) ** 2).to_numpy(), eb, g)
+                out.append(dict(crop=c, pattern=pat, alternative=strat_label(m, i), rmse_diff=d,
+                                ci_lo=ci[0], ci_hi=ci[1], significant=bool(ci[0] > 0 or ci[1] < 0)))
+    df = pd.DataFrame(out)
+    df.to_csv(TAB / "recommended_vs_alternatives.csv", index=False)
+    return df
 
 
 if __name__ == "__main__":

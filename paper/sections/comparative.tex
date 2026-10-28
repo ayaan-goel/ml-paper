@@ -1,2 +1,101 @@
 \section{Comparative Analysis}\label{sec:comp}
-Placeholder.
+
+\subsection{Overall Performance Comparison}
+
+To show how the usual evaluation differs from realistic conditions, the $R^2$ of five
+model--strategy combinations is compared in Table~\ref{tab:prior} under the random split with
+complete data, which is the protocol of most earlier studies, and under four realistic
+conditions: the temporal split, the district holdout, and the district holdout with 30\% of the
+weather missing under each pattern. The last column gives the gap between the random-split $R^2$
+and the mean $R^2$ under the three missingness patterns in unseen districts.
+
+\begin{table}[!t]
+\caption{$R^2$ Under the Usual Random-Split Protocol and Under Realistic Conditions (Mean Over
+Crops; Best per Column in Bold)}\label{tab:prior}
+\centering\footnotesize\setlength{\tabcolsep}{2.4pt}
+\input{tables/prior_vs_ours}
+
+\vspace{2pt}{\scriptsize Temp.: temporal split; Distr.: district holdout; Var.: variable-wise;
+Gap: random-split $R^2$ minus the mean $R^2$ of the three missingness columns.}
+\end{table}
+
+The random split overstated the accuracy available in unseen districts with incomplete weather by
+0.12 to 0.17 in $R^2$ for every strategy, that is, by about a third to a half of the reported
+value. The random forest with iterative imputation, which is recommended by the results of
+Section~\ref{sec:results}, retained the highest accuracy under random masking ($R^2 = 0.26$) and
+shared the best values under the other patterns with the random forest with median replacement.
+Compared with the strategies most often found in earlier work, it retained 0.07 more $R^2$ than
+XGBoost with native handling under random masking and 0.13 more than ridge regression with median
+replacement, while the gap to its own random-split value was the smallest of all strategies (0.12).
+These gains were obtained with existing methods; the comparison is therefore presented as evidence
+for a choice among them, not as a new model, and because the strategies were compared on the
+same data on which the recommendation is based, the advantage should be confirmed in other states.
+
+\subsection{Comparison Among the Models}
+
+A consistent picture is formed when the results are taken together. The random forest was the
+most accurate model under the random split and the district holdout, with complete and with
+incomplete weather; a random-forest strategy was the best of the ten in 35 of the 36 combinations
+of crop, pattern and rate, regardless of the imputer. XGBoost was second, and its
+native handling of missing values was not better than imputation. Ridge regression was the least
+damaged by missingness, the best model under the temporal split and, with location features, the
+best model on unseen districts with complete data; its strength lies in extrapolation, which tree
+ensembles cannot provide. The mean predictor was clearly outperformed in every design, but all
+models explained at most about 40\% of the yield variance, which reflects the limited information
+in district-level weather summaries.
+
+\subsection{Comparison With Earlier Studies}
+
+The main findings are set against earlier work in Table~\ref{tab:earlier}. The over-optimism of
+random validation reported for spatial data \cite{roberts2017,ploton2020} and for yield models in
+the United States and Africa \cite{chakravarty2026,adjei2026} was confirmed for Indian districts,
+although the loss was smaller: positive $R^2$ was retained in unseen districts of one state, where
+neighbouring districts share climate and practices. As in Germany \cite{baatz2025}, transfer to
+future years was harder than transfer to new locations. The observation that no single imputer is
+always best \cite{saini2024,calin2023} was confirmed, and it was found to matter less than the
+choice of model.
+
+\begin{table}[!t]
+\caption{Findings of This Study Compared With Earlier Work}\label{tab:earlier}
+\centering\footnotesize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{p{1.35cm}p{2.05cm}p{2.1cm}p{1.8cm}}
+\toprule
+Study & Earlier finding & Result in this study & Added insight \\
+\midrule
+Alsaber \emph{et al.} \cite{alsaber2025} & No single model best; overfitting on test years & An RF strategy was best in 35 of 36 settings of unseen districts & Ranking is stable once evaluation is realistic \\
+Manogna R.~L. \emph{et al.} \cite{manogna2026} & Persistence nearly ties a deep model & Weather explains at most 40\% of variance & Gains over naive baselines are modest \\
+Saini \& Nagpal \cite{saini2024} & Mean replacement competitive & Median within 0.4 pp of iterative & Model choice matters more \\
+Chakravarty \cite{chakravarty2026}, Adjei \cite{adjei2026} & Negative $R^2$ in unseen regions & $R^2$ falls from 0.37 to 0.29 & Smaller loss within one state \\
+Baatz \cite{baatz2025} & Temporal transfer harder than spatial & Confirmed; linear trend helps & Trees cannot extrapolate trends \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Practical Implications}
+
+A simple guide, summarised in Table~\ref{tab:guide}, is suggested by the findings. A model that
+will be used in districts outside its training data should be evaluated with a district holdout,
+because the random split overstates its accuracy. A random forest is the safest model under
+geographic shift and missing weather, and iterative imputation should be preferred when values
+are missing at random, although median replacement is nearly as good. When whole variable groups
+are missing, no imputer recovers the loss, and the variable should be obtained from another
+source. When the model must predict future seasons, a model with a linear trend term, or a
+detrended target, is needed. Because missingness and geographic shift did not compound, a model
+that has been validated on unseen districts can be expected to tolerate moderate gaps in its
+weather inputs.
+
+\begin{table}[!t]
+\caption{Practical Guide Derived From the Results}\label{tab:guide}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{2.2cm}p{2.6cm}p{2.6cm}}
+\toprule
+Situation & Main finding & Recommendation \\
+\midrule
+New districts & $R^2$ drops by 0.08--0.13 & Validate with district holdout; use RF \\
+Random gaps & Small damage (0.4--0.8 pp at 30\%) & RF with iterative or median imputation \\
+Missing variable group & Largest damage; imputation does not help & Obtain the variable from another source \\
+Outages in daily data & Features distorted, not missing & Treat as noise; any imputer \\
+Future seasons & Trees fail to extrapolate & Ridge with trend, or detrended target \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,16 @@
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Random (MCAR)} & \multicolumn{2}{c}{Variable-wise} & \multicolumn{2}{c}{Block outage} \\ \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}Strategy & $\Delta$nRMSE & $R^2$ & $\Delta$nRMSE & $R^2$ & $\Delta$nRMSE & $R^2$ \\
+\midrule
+Ridge + median & 0.8 & 0.13 & 0.6 & 0.14 & 0.3 & 0.17 \\
+Ridge + KNN & 0.5 & 0.15 & 0.7 & 0.14 & 0.1 & 0.17 \\
+Ridge + iterative & 0.3 & 0.17 & 0.4 & 0.15 & 0.3 & 0.17 \\
+RF + median & 0.8 & 0.25 & 1.1 & 0.23 & 0.8 & 0.25 \\
+RF + KNN & 0.5 & 0.26 & 1.4 & 0.22 & 0.8 & 0.25 \\
+RF + iterative & 0.4 & 0.26 & 1.2 & 0.22 & 0.8 & 0.25 \\
+XGB + median & 0.6 & 0.20 & 1.3 & 0.17 & 0.8 & 0.20 \\
+XGB + KNN & 0.5 & 0.21 & 1.5 & 0.16 & 0.7 & 0.20 \\
+XGB + iterative & 0.4 & 0.21 & 1.4 & 0.16 & 0.9 & 0.19 \\
+XGB + native & 0.8 & 0.19 & 1.1 & 0.18 & 0.6 & 0.21 \\
+\bottomrule
+\end{tabular}

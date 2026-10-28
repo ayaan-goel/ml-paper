@@ -1,0 +1,1 @@
+Friedman chi2=205.10, p=2.82e-39, blocks=36, strategies=10

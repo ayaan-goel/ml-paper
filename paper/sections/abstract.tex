@@ -1,3 +1,24 @@
 \begin{abstract}
-Placeholder.
+Machine-learning models for crop-yield prediction are usually evaluated on random splits with
+complete weather inputs, although in practice weather records are incomplete and models are
+applied to districts that were not seen during training. These two conditions were studied here,
+separately and together, for 32 districts of Gujarat, India. Official district statistics for
+groundnut, bajra and wheat from 1997--98 to 2022--23 were linked with daily NASA POWER weather, and
+18 seasonal features were derived. Ridge regression, a random forest and XGBoost were evaluated
+under a random split, a temporal split and a district holdout, and missing weather was simulated by
+random masking, removal of variable groups and outages in the daily record at 10 to 40\%, with
+median, nearest-neighbour, iterative and native handling. Holding out districts lowered $R^2$ from
+0.37 to 0.29 for the random forest, and the random split overstated the accuracy available in
+unseen districts with 30\% missing weather by 0.12 to 0.17 in $R^2$. Missing weather raised the
+normalised error by up to 1.6 percentage points, most when whole variable groups were missing, and
+the choice of model mattered more than the imputer: a random-forest strategy was best in 35 of 36
+settings. Contrary to expectation, the two problems did not compound; their combined loss was
+significantly smaller than the sum of their separate losses ($p < 0.001$). Predicting future
+seasons was the hardest task, since tree ensembles could not extrapolate the yield trend. District
+holdouts should therefore replace random splits when yield models are validated for new regions.
 \end{abstract}
+
+\begin{IEEEkeywords}
+crop yield prediction, missing data, imputation, distribution shift, spatial cross-validation,
+random forest, NASA POWER
+\end{IEEEkeywords}

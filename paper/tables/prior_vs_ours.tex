@@ -1,0 +1,11 @@
+\begin{tabular}{lrrrrrrr}
+\toprule
+ & Usual & \multicolumn{2}{c}{Complete data} & \multicolumn{3}{c}{Distr.\ + 30\% missing} & \\ \cmidrule(lr){3-4}\cmidrule(lr){5-7}Strategy & random & Temp. & Distr. & MCAR & Var. & Block & Gap \\
+\midrule
+Ridge + median & 0.31 & \textbf{0.04} & 0.19 & 0.13 & 0.14 & 0.17 & 0.17 \\
+XGB + median & 0.32 & $-$0.04 & 0.24 & 0.20 & 0.17 & 0.20 & 0.13 \\
+XGB + native & 0.32 & $-$0.04 & 0.24 & 0.19 & 0.18 & 0.21 & 0.13 \\
+RF + median & \textbf{0.37} & $-$0.03 & \textbf{0.29} & 0.25 & \textbf{0.23} & \textbf{0.25} & 0.13 \\
+RF + iterative & \textbf{0.37} & $-$0.03 & \textbf{0.29} & \textbf{0.26} & 0.22 & 0.25 & 0.12 \\
+\bottomrule
+\end{tabular}

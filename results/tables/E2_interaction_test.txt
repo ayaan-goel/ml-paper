@@ -1,0 +1,1 @@
+one-sample t-test of interaction (crop x strategy x pattern means) vs 0: mean=-0.395, t=-3.85, p=0.00038, n=45

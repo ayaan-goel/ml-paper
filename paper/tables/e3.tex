@@ -1,0 +1,12 @@
+\begin{tabular}{llrrrrrr}
+\toprule
+ & & \multicolumn{2}{c}{0\%} & \multicolumn{2}{c}{20\%} & \multicolumn{2}{c}{40\%} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}Strategy & Features & nRMSE & $R^2$ & nRMSE & $R^2$ & nRMSE & $R^2$ \\
+\midrule
+RF + median & Full (18) & 33.9 & 0.29 & 34.1 & 0.27 & 35.1 & 0.23 \\
+RF + median & Mutual info. (8) & 33.9 & 0.28 & 34.4 & 0.26 & 35.1 & 0.22 \\
+RF + median & RFE (8) & 34.1 & 0.28 & 34.6 & 0.25 & 35.3 & 0.21 \\
+XGB + native & Full (18) & 35.1 & 0.24 & 35.3 & 0.22 & 36.3 & 0.17 \\
+XGB + native & Mutual info. (8) & 35.6 & 0.21 & 36.1 & 0.18 & 36.7 & 0.15 \\
+XGB + native & RFE (8) & 35.6 & 0.22 & 36.3 & 0.18 & 36.8 & 0.14 \\
+\bottomrule
+\end{tabular}
