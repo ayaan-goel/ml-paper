@@ -26,3 +26,4 @@ Label_Noise_Ensembles_IEEE_Paper.pdf
 # Office lock files and run logs
 ~$*
 results/run_log.txt
+paper/main.pdf

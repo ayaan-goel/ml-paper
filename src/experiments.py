@@ -1,8 +1,8 @@
 """Run all experiments and save out-of-fold predictions.
 
 E1  complete data under three evaluation designs (random, temporal, district holdout)
-E2  simulated missing weather (MCAR, variable-wise, block) x imputation, under the
-    temporal design (familiar districts) and the district holdout (unseen districts)
+E2  simulated missing weather (MCAR, variable-wise, block) x imputation, under all three
+    designs (random split = familiar districts and years; temporal; district holdout)
 E3  feature selection (mutual information, RFE) under the district holdout
 E4  location features (latitude, longitude) under the district holdout
 
@@ -197,7 +197,7 @@ def main(which):
             y = df.yield_t_ha.to_numpy()
             for pattern, rate, seed in itertools.product(PATTERNS, RATES, SEEDS):
                 X = apply_missingness(df, daily, season, pattern, rate, seed=1000 * seed + int(rate * 100))
-                for design, (model, imp) in itertools.product(["temporal", "district"], combos):
+                for design, (model, imp) in itertools.product(["random", "temporal", "district"], combos):
                     tasks.append((dict(crop=crop, design=design, model=model, imputer=imp, seed=seed,
                                        pattern=pattern, rate=rate,
                                        missing_frac=float(np.isnan(X[:, :len(WEATHER_FEATURES)]).mean())),

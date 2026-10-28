@@ -1,0 +1,52 @@
+\section{Performance Metrics}\label{sec:metrics}
+
+\subsection{Error Metrics}
+
+For a crop with $N$ test observations, let $y_i$ denote the reported yield of observation $i$ in
+t/ha, $\hat{y}_i$ its out-of-fold prediction and $\bar{y}$ the mean of the $y_i$. The root mean
+squared error, the mean absolute error and the coefficient of determination are
+\begin{align}
+\mathrm{RMSE} &= \sqrt{\frac{1}{N}\sum_{i=1}^{N}\left(y_i - \hat{y}_i\right)^2}, \label{eq:rmse}\\
+\mathrm{MAE} &= \frac{1}{N}\sum_{i=1}^{N}\left|y_i - \hat{y}_i\right|, \label{eq:mae}\\
+R^2 &= 1 - \frac{\sum_{i}\left(y_i - \hat{y}_i\right)^2}{\sum_{i}\left(y_i - \bar{y}\right)^2}, \label{eq:r2}
+\end{align}
+where $R^2$ compares the model with a predictor that always returns the mean of the evaluated
+observations; it can be negative when the model is worse than that predictor. Because the three
+crops differ in their yield level, the RMSE is also expressed as a percentage of the mean yield,
+\begin{equation}
+\mathrm{nRMSE} = 100\,\frac{\mathrm{RMSE}}{\bar{y}}, \label{eq:nrmse}
+\end{equation}
+which allows averages over the crops. All metrics are computed on the pooled out-of-fold
+predictions of one seed and then averaged over the three seeds.
+
+\subsection{Derived Metrics}
+
+The \emph{degradation} caused by missing data is the change in nRMSE relative to complete data
+under the same model and evaluation design,
+\begin{equation}
+\Delta\mathrm{nRMSE} = \mathrm{nRMSE}(\rho) - \mathrm{nRMSE}(0), \label{eq:delta}
+\end{equation}
+in percentage points (pp), where $\rho$ is the missingness rate. To test whether missing data and
+geographic shift interact, three effects are measured relative to the random split with complete
+data, $\mathrm{nRMSE}_{R,0}$: the geographic effect
+$G = \mathrm{nRMSE}_{D,0} - \mathrm{nRMSE}_{R,0}$, the missingness effect
+$M = \mathrm{nRMSE}_{R,\rho} - \mathrm{nRMSE}_{R,0}$ and the combined effect
+$C = \mathrm{nRMSE}_{D,\rho} - \mathrm{nRMSE}_{R,0}$, where the subscripts $R$ and $D$ denote the
+random split and the district holdout. The \emph{interaction} is
+\begin{equation}
+I = C - (G + M), \label{eq:inter}
+\end{equation}
+which is positive when the combined loss exceeds the sum of the separate losses, and zero when the
+two effects simply add.
+
+\subsection{Statistical Tests}
+
+Uncertainty in an RMSE difference between two conditions evaluated on the same observations was
+estimated by a bootstrap over districts \cite{efron1993}: the districts were resampled with
+replacement 2,000 times, the RMSE of both conditions was recomputed on the resampled observations,
+and the 2.5th and 97.5th percentiles of the difference were reported as a 95\% confidence interval.
+Resampling whole districts respects the dependence between observations of the same district.
+Following Dem\v{s}ar \cite{demsar2006}, the ten model--strategy combinations were ranked by RMSE
+within each crop, pattern and rate under the district holdout, and the ranks were compared with the
+Friedman test \cite{friedman1937}. The interaction $I$ in \eqref{eq:inter} was tested against zero
+with a one-sample $t$-test over the crop, strategy and pattern combinations.

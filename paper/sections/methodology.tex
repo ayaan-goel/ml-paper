@@ -1,0 +1,187 @@
+\section{Research Methodology}\label{sec:method}
+
+\subsection{Research Design}
+
+A controlled computational experiment with a factorial design was carried out. The model (four
+models), the evaluation design (random split, temporal split, district holdout), the missingness
+pattern (three patterns), the missingness rate (0, 10, 20, 30 and 40\%) and the strategy used to
+handle missing values (four strategies) were treated as the \emph{independent variables}. The
+prediction error on held-out observations, measured by the metrics of Section~\ref{sec:metrics},
+was treated as the \emph{dependent variable}. All other factors were held fixed: the
+hyperparameters of every model were kept the same in every condition, and within each crop and
+seed the same missingness masks were reused for every model and strategy, so that all comparisons
+between models and strategies are paired. Feature selection and location features were studied in
+two additional experiments with the same protocol.
+
+\subsection{Participants}
+
+No human participants or personal data were involved, so ethical approval was not required. The
+units of analysis are district--crop--season--year observations compiled from public, aggregated
+government statistics, as described in Section~\ref{sec:data}.
+
+\subsection{Proposed System}
+
+The experimental framework is shown in Fig.~\ref{fig:framework}. District crop statistics and daily
+weather are cleaned and joined, and seasonal weather features are computed for each observation.
+For each crop, a missingness mask is drawn and applied, the observations are divided into training
+and test folds according to the evaluation design, the missing-value strategy and the model are
+fitted on the training folds only, and predictions are made for the test fold. The out-of-fold
+predictions are pooled, and the metrics are computed and compared across conditions.
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[node distance=3.2mm, every node/.style={font=\scriptsize},
+  box/.style={draw, rounded corners=1pt, align=center, minimum width=5.2cm, inner sep=2.2pt},
+  arr/.style={-{Latex[length=1.6mm]}, thin}]
+\node[box] (crop) {DES district crop statistics\\ + NASA POWER daily weather (1997--2023)};
+\node[box, below=of crop] (clean) {Cleaning, area filter, join by district and season};
+\node[box, below=of clean] (feat) {Seasonal weather features (18 per observation)};
+\node[box, below=of feat] (mask) {Missingness mask: MCAR / variable-wise / block outage};
+\node[box, below=of mask] (split) {Evaluation design: random / temporal / district holdout};
+\node[box, below=of split] (fit) {Missing-value strategy + model fitted on training folds};
+\node[box, below=of fit] (pred) {Pooled out-of-fold predictions $\rightarrow$ RMSE, MAE, $R^2$, nRMSE};
+\node[box, below=of pred] (stat) {Bootstrap over districts, Friedman test across conditions};
+\foreach \a/\b in {crop/clean, clean/feat, feat/mask, mask/split, split/fit, fit/pred, pred/stat}
+  \draw[arr] (\a) -- (\b);
+\node[draw, dashed, rounded corners=2pt, fit=(mask)(split)(fit), inner sep=2.5pt] (rep) {};
+\node[right=1mm of rep, align=left, font=\scriptsize] {repeated\\ for 3 seeds};
+\end{tikzpicture}
+\caption{Experimental framework used for every crop, model, strategy and condition.}
+\label{fig:framework}
+\end{figure}
+
+\subsection{Dataset Collection}\label{sec:data}
+
+Crop statistics were obtained from the district-wise, season-wise Area, Production and Yield (APY)
+data of the Directorate of Economics and Statistics (DES), Ministry of Agriculture and Farmers
+Welfare \cite{desapy}, which cover the agricultural years 1997--98 to 2022--23 and report area in
+hectares and production in tonnes. Gujarat was chosen as the study region, and three major crops
+with long and consistent records were selected: groundnut and bajra, grown in the Kharif
+(monsoon) season, and wheat, grown in the Rabi (winter) season. Daily weather was obtained from the
+NASA POWER daily point API \cite{nasapower} for 1~January 1997 to 31~December 2023 at the
+headquarters of each of Gujarat's 33 districts. The meteorological fields of NASA POWER are derived
+from the MERRA-2 reanalysis on a grid of $0.5^\circ \times 0.625^\circ$, and solar radiation from
+the CERES product. Seven variables were retrieved: corrected precipitation, mean, maximum and
+minimum air temperature at 2~m, relative humidity at 2~m, all-sky downward shortwave radiation and
+wind speed at 2~m. The resulting dataset is summarised in Table~\ref{tab:data}.
+
+\begin{table}[!t]
+\caption{Analysis Dataset After Cleaning}\label{tab:data}
+\centering\footnotesize\setlength{\tabcolsep}{3.5pt}
+\input{tables/dataset}
+
+\vspace{2pt}{\scriptsize Obs.: district--year observations; Distr.: districts; yield as mean $\pm$
+standard deviation.}
+\end{table}
+
+\subsection{Data Preprocessing}
+
+Of the 455,359 records in the national file, 19,407 belong to Gujarat and 1,888 to the three
+selected crop--season combinations (groundnut and bajra in Kharif, wheat in Rabi). One record
+with missing production was removed. Records with a cropped area below 1,000~ha were then
+excluded, because yields computed from very small areas are unreliable; for example, a groundnut
+record of 49~t/ha was found among them. This rule removed 399 records and left 1,488 observations
+from 32 districts; Navsari, where none of the three crops reached 1,000~ha, dropped out. No
+duplicates were present, and yield was computed as production divided by area. District names in
+the crop file and the weather requests were matched exactly, including the seven districts formed
+in 2013, which have records only from 2014--15. The raw weather contained no missing values, so all
+missing values in the experiments are simulated.
+
+\subsection{Feature Engineering}
+
+For each observation, the daily weather was cut to the season window of its crop: 1~June to
+31~October (153 days) for Kharif and 1~November to 31~March (151 days) for Rabi. Eighteen features
+were computed, grouped as follows. \emph{Rainfall} (7): seasonal total, number of rainy days
+($\geq 2.5$~mm, the threshold of the India Meteorological Department), standard deviation of daily
+rainfall, maximum one-day rainfall and totals for the early, middle and late thirds of the season.
+\emph{Temperature} (7): seasonal means of the daily mean, maximum and minimum temperature, number of
+hot days (maximum above 35\,$^\circ$C in Kharif and 32\,$^\circ$C in Rabi) and mean temperature in
+each third of the season. \emph{Humidity}, \emph{solar radiation} and \emph{wind} (1 each): seasonal
+means. The \emph{year} of the season was added to capture the technology trend in yields. All
+features were computed with missing-aware operations: means and counts used the available days,
+totals were rescaled to the full window, and a feature was set to missing when more than half of
+its days were missing.
+
+\subsection{Missing-Data Simulation}
+
+Let $\rho \in \{0.1, 0.2, 0.3, 0.4\}$ denote the missingness rate. Three mechanisms were simulated.
+\begin{itemize}
+\item \emph{Random (MCAR):} each weather feature of each observation is removed independently with
+probability $\rho$.
+\item \emph{Variable-wise:} for each observation, each of the five variable groups (rainfall,
+temperature, humidity, solar radiation, wind) is removed as a whole with probability $\rho$,
+which mimics a sensor or data product that is unavailable for a season.
+\item \emph{Block outage:} for each observation and each of the seven daily variables, a contiguous
+run of $\lfloor \rho L \rceil$ days is removed from the $L$-day season window at a uniformly random
+position, and the features are then recomputed from the incomplete daily record.
+\end{itemize}
+Under the first two mechanisms, features become missing; under the block mechanism, most features
+remain available but are estimated from fewer days, and only features of a season third that loses
+more than half of its days become missing. The same mechanism and rate were applied to training and
+test observations, with independent draws, because historical records used for training are also
+incomplete in practice. The year feature was never removed.
+
+\subsection{Missing-Value Strategies}
+
+Four strategies were compared, each fitted on the training folds only: (i)~\emph{median}
+replacement; (ii)~\emph{KNN} imputation with $k = 5$ neighbours on standardised features
+\cite{troyanskaya2001}; (iii)~\emph{iterative} imputation, in which each feature is regressed on
+the others with Bayesian ridge regression for up to ten rounds \cite{vanbuuren2011}; and
+(iv)~\emph{native} handling in XGBoost, in which missing values are sent along a default branch
+learned during training \cite{chen2016}. Strategies (i)--(iii) were combined with every model and
+strategy (iv) with XGBoost only, giving ten model--strategy combinations.
+
+\subsection{Models and Training Configuration}
+
+The four models and their fixed settings are listed in Table~\ref{tab:models}. A mean predictor
+serves as the naive reference. Ridge regression \cite{hoerl1970} fits a linear relation with an
+$\ell_2$ penalty chosen by internal cross-validation. In a random forest \cite{breiman2001}, many
+regression trees are grown on bootstrap samples and averaged. In XGBoost \cite{chen2016}, trees are
+added one after another to reduce a regularised squared loss with second-order steps. A separate
+model was trained for each crop, because the crops differ in season, yield level and weather
+response. Hyperparameters were not tuned per condition, so that differences between conditions
+could not be caused by tuning.
+
+\begin{table}[!t]
+\caption{Models and Fixed Hyperparameters}\label{tab:models}
+\centering\footnotesize
+\begin{tabular}{lp{5.6cm}}
+\toprule
+Model & Settings \\
+\midrule
+Mean & Mean of the training yields \\
+Ridge & Standardised inputs; $\alpha \in \{10^{-3}, \ldots, 10^{3}\}$ (13 values) by internal CV \\
+RF & 300 trees, min.\ 2 samples per leaf, 50\% of features per split \\
+XGB & 400 trees of depth 4, learning rate 0.05, 80\% row and column subsampling, min.\ child weight 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Evaluation Designs}
+
+Three designs were used. In the \emph{random split}, the observations of a crop were divided into
+five folds at random, as in most earlier studies; districts and years seen in training therefore
+also appear in the test folds. In the \emph{temporal split}, the model was trained on the seasons
+1997--98 to 2015--16 and tested on 2016--17 to 2022--23 (96 to 205 test observations per crop),
+which measures transfer to future years in familiar districts. In the \emph{district holdout},
+the districts were divided into five groups, and each group was predicted by a model trained on the
+other four, so that no observation of a test district was used for training, imputation or model
+fitting. Every condition was repeated with three seeds, which changed the folds (except in the
+temporal split, which is fixed), the missingness masks and the model randomness.
+
+\subsection{Additional Experiments}
+
+Two further experiments used the district holdout. In the \emph{feature-selection} experiment,
+the full set of 18 features was compared with eight features chosen on each training fold by
+mutual information \cite{kraskov2004} or by recursive feature elimination with a random forest
+\cite{guyon2002}, at MCAR rates of 0, 20 and 40\%; selection was carried out on a median-imputed
+copy of the training data. In the \emph{location} experiment, the latitude and longitude of the
+district headquarters were added to the features of complete data.
+
+\subsection{Implementation Details}
+
+The experiments were implemented in Python 3.13 with scikit-learn 1.9.1 \cite{pedregosa2011},
+XGBoost 3.4.1, NumPy 2.5, pandas 3.0 and SciPy 1.18. All runs were performed on a laptop CPU
+(Intel Core i7-1255U, 12 threads, 16~GB memory) without a GPU, with conditions run in parallel.
+Every random step was controlled by a seed, and all predictions were stored so that every reported
+number can be recomputed from the released files.

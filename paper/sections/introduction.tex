@@ -1,0 +1,55 @@
+\section{Introduction}
+
+Crop-yield estimates at the district level are used in India for procurement planning, crop
+insurance and early warning of agricultural stress. Weather strongly influences yield, and
+machine-learning models that learn the relation between seasonal weather and yield have been
+reported to predict yield with useful accuracy \cite{vanklompenburg2020,jeong2016,khaki2019}.
+Random forests and gradient-boosted trees are now common choices for this task, and they have
+been applied to Indian district statistics combined with gridded weather from NASA POWER
+\cite{alsaber2025,manogna2026}.
+
+Two conditions that arise when such a model is used in practice are, however, rarely tested.
+First, weather inputs are often incomplete. Station outages, processing failures and errors
+when sources are merged leave gaps in the daily record, and a model trained on complete inputs
+must then work with fewer or distorted features. Imputation methods ranging from simple medians
+to iterative model-based estimates are available \cite{little2019,troyanskaya2001,vanbuuren2011},
+but in crop-yield studies they have been compared only on the gaps that a dataset happened to
+contain \cite{saini2024,calin2023}. Second, a model is often applied to districts that were not
+represented when it was trained. Districts differ in rainfall regime, soil and irrigation, and
+when observations from the same district appear in both the training and the test set, the
+reported accuracy describes familiar districts only. Spatially structured data are known to make
+random cross-validation over-optimistic \cite{roberts2017,meyer2019,ploton2020}, and recent work on
+United States counties and African countries has shown that yield models can lose most of their
+skill on unseen regions \cite{chakravarty2026,adjei2026}.
+
+These two problems have been studied separately, and neither has been studied for Indian
+district data in combination with the other. A model may tolerate missing inputs in districts
+it knows and yet fail when the inputs are incomplete \emph{and} the district is new. It also
+remains unclear which imputation strategy should be preferred under each kind of gap, and how
+much the random-split evaluation used in most earlier studies overstates the accuracy that can
+be expected in a realistic deployment.
+
+In the present study, these questions are addressed through a controlled experiment on 32
+districts of Gujarat. Official district statistics for groundnut, bajra (pearl millet) and wheat
+from 1997--98 to 2022--23 \cite{desapy} were linked with daily NASA POWER weather \cite{nasapower},
+and seasonal weather features were derived for each crop's growing season. Four models were
+compared under three evaluation designs (a random split, a temporal split and a district
+holdout), and missing weather was simulated under three mechanisms at rates of 10 to 40\%:
+random masking of features, removal of whole variable groups and contiguous outages in the daily
+record. Four ways of handling the gaps were compared, and their effect was measured in familiar
+and in unseen districts so that the interaction of the two problems could be estimated.
+Feature selection and location features were also evaluated.
+
+The following research questions are answered: (RQ1) how strongly missing weather degrades
+prediction, and which strategy best preserves it; (RQ2) how much accuracy is lost on districts
+excluded from training; (RQ3) whether missing inputs and geographic shift together cause a larger
+loss than the sum of their separate effects; and (RQ4) whether feature selection improves
+robustness. The code, the processed data and all predictions have been made publicly
+available.\footnote{\url{https://github.com/ayaan-goel/ml-paper}}
+
+The remainder of the paper is organised as follows. Related studies are reviewed and the research
+gap is identified in Section~\ref{sec:lit}. The research design, data, preprocessing, missingness
+model and training configuration are described in Section~\ref{sec:method}, and the performance
+metrics are defined in Section~\ref{sec:metrics}. The results are presented in
+Section~\ref{sec:results} and compared with earlier findings in Section~\ref{sec:comp}. The paper
+is concluded in Section~\ref{sec:concl}.

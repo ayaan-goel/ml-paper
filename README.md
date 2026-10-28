@@ -40,6 +40,6 @@ results/                  predictions, tables and figures
 
 - **E1** Complete data under random, temporal and district-holdout evaluation
 - **E2** Simulated missing weather (random, variable-wise, block outages; 10-40%) with median,
-  KNN, iterative and native (XGBoost) handling, in familiar and unseen districts
+  KNN, iterative and native (XGBoost) handling, under random, temporal and district-holdout evaluation
 - **E3** Feature selection (mutual information, recursive feature elimination)
 - **E4** Location features (latitude, longitude)

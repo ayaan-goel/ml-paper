@@ -1,0 +1,82 @@
+\section{Literature Review}\label{sec:lit}
+
+\subsection{Machine Learning for Crop-Yield Prediction}
+
+Statistical crop--climate models, in which yield is regressed on seasonal weather summaries,
+have long been used as interpretable baselines \cite{lobell2010}. In a systematic review of 50
+machine-learning studies, temperature, rainfall and soil type were found to be the most frequently
+used features, and neural networks, random forests and gradient boosting the most frequently used
+models \cite{vanklompenburg2020}. Random forests were shown to outperform multiple linear regression
+for global and regional yield prediction \cite{jeong2016}, and deep networks were applied to large
+maize datasets \cite{khaki2019}. For India, district yields from the Directorate of Economics and
+Statistics have been combined with NASA POWER weather. In a study of pearl millet in nine districts
+of Rajasthan from 1997 to 2019, no single model was best in every district, and XGBoost and
+generalised linear models fitted the training years almost perfectly but often failed on the test
+years \cite{alsaber2025}. In a benchmark of nine model classes on 275 wheat districts from 2001
+to 2023, a hybrid CNN--BiLSTM--attention model reached an $R^2$ of 0.795, but a persistence
+forecast that repeats the previous year's yield was almost as accurate on average
+\cite{manogna2026}. Both studies tested on later years of the same districts and assumed complete
+weather inputs.
+
+\subsection{Missing Data in Agricultural Prediction}
+
+Missing values are classified as missing completely at random (MCAR), missing at random, or
+missing not at random \cite{little2019}. Common remedies include replacement with a mean or median,
+$k$-nearest-neighbour (KNN) imputation \cite{troyanskaya2001}, chained-equation (iterative)
+imputation \cite{vanbuuren2011} and random-forest imputation \cite{stekhoven2012}, while
+gradient-boosted trees such as XGBoost can route missing values through learned default branches
+\cite{chen2016}. For Indian wheat data from 370 districts, Saini and Nagpal \cite{saini2024} found
+that simple mean replacement performed best among the statistical methods ($R^2 = 0.83$) and
+MissForest and MICE among the learned methods ($R^2 = 0.80$). For sunflower in Romania, Călin
+\emph{et al.} \cite{calin2023} raised $R^2$ from 0.723, obtained when incomplete rows were removed,
+to 0.938 with random-forest imputation and outlier removal. In both studies, the gaps that
+happened to be present in the data were used, so the rate and the pattern of missingness were not
+controlled.
+
+\subsection{Spatial Validation and Distribution Shift}
+
+When observations close in space are split between training and test sets, random
+cross-validation overestimates the accuracy that can be expected at new locations
+\cite{roberts2017,meyer2019}, and spatial validation of large-scale ecological maps has revealed
+much poorer performance than random validation \cite{ploton2020}. Such distribution shifts between
+training and deployment domains have been formalised in benchmarks such as WILDS \cite{koh2021}.
+For crop yield, Chakravarty \cite{chakravarty2026} showed on more than 1,200 United States counties
+that leave-one-region-out evaluation causes large performance gaps between agro-ecological regions,
+with negative $R^2$ for some models. In Germany, models that performed well on spatial test splits
+lost accuracy on independent years, and their SHAP importances remained plausible even when they
+did not generalise \cite{baatz2025}. In Sub-Saharan Africa, leave-one-country-out evaluation gave
+negative $R^2$ for every feature set, whereas within-country random cross-validation gave moderate
+values \cite{adjei2026}.
+
+\subsection{Research Gap}
+
+The closest studies are summarised in Table~\ref{tab:related}. Indian district studies have assumed
+complete weather and tested only on familiar districts; imputation studies have not controlled the
+missingness mechanism or tested transfer to new regions; and studies of geographic shift have not
+considered missing inputs and have not used Indian data. To the best of the authors' knowledge, a
+controlled evaluation of missing weather data and geographic shift \emph{together}, which also
+measures how much random-split evaluation overstates accuracy, has not been reported for Indian
+district-level yield prediction. This gap is addressed in the present study.
+
+\begin{table}[!t]
+\caption{Summary of Closely Related Studies}\label{tab:related}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{1.55cm}p{1.6cm}p{1.35cm}ccc}
+\toprule
+Study & Data & Models & Ctrl.\ miss. & Unseen region & Joint \\
+\midrule
+Alsaber \emph{et al.} \cite{alsaber2025} & Rajasthan, bajra, 9 distr. & GLM, RF, XGB, SVR & No & No & No \\
+Manogna R.~L. \emph{et al.} \cite{manogna2026} & India, wheat, 275 distr. & RF, boosting, deep & No & No & No \\
+Saini \& Nagpal \cite{saini2024} & India, wheat, 370 distr. & 8 imputers & No & No & No \\
+Călin \emph{et al.} \cite{calin2023} & Romania, sunflower & 9 imputers, boosting & No & No & No \\
+Chakravarty \cite{chakravarty2026} & USA, corn, soybean & GNN-RNN, ViT & No & Yes & No \\
+Baatz \cite{baatz2025} & Germany, NUTS-3 & RF, XGB, LSTM & No & Yes & No \\
+Adjei \cite{adjei2026} & Africa, maize & Embeddings & No & Yes & No \\
+\textbf{This work} & Gujarat, 3 crops, 32 distr. & Ridge, RF, XGB & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} \\
+\bottomrule
+\end{tabular}
+
+\vspace{2pt}{\scriptsize Ctrl.\ miss.: missingness simulated at controlled rates and patterns;
+Joint: both conditions evaluated together.}
+\end{table}
