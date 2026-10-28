@@ -20,7 +20,9 @@ pip install -r requirements.txt
 python src/download_crop_data.py     # DES crop statistics (about 56 MB)
 python src/download_nasa_power.py    # daily weather for 33 district headquarters
 python src/prepare_data.py           # builds data/processed/panel.csv
-python src/experiments.py            # runs experiments E1-E4
+python src/experiments.py            # runs experiments E1-E4 (about 50 min on 12 threads)
+python src/analysis.py               # metrics, tests, tables (paper/tables) and figures
+sh paper/build.sh                    # builds paper/main.pdf (needs pdflatex + bibtex)
 ```
 
 ## Repository layout
@@ -32,6 +34,8 @@ src/
   features.py             seasonal weather features (NaN-aware)
   prepare_data.py         cleaning, joining and data audit
   experiments.py          experiments E1-E4
+  analysis.py             metrics, bootstrap, Friedman test, tables and figures
+paper/                    LaTeX source of the paper (IEEEtran)
 data/processed/           analysis dataset
 results/                  predictions, tables and figures
 ```
